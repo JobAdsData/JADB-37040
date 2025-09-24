@@ -1,0 +1,23 @@
+[
+  {
+    "objectID": "about.html",
+    "href": "about.html",
+    "title": "About",
+    "section": "",
+    "text": "About this site"
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "JADB 37040",
+    "section": "",
+    "text": "Zooming in on the category 37040 (HISCO code).\nTitles can be filtered through the ‘Filter titles’ box.\nTitles can be selected by clicking or shift+clicking or cmd/ctrl+clicking on titles from the list.\nThe number in parenthesis is the total number of page hits for that title."
+  },
+  {
+    "objectID": "index.html#inputs",
+    "href": "index.html#inputs",
+    "title": "JADB 37040",
+    "section": "Inputs",
+    "text": "Inputs\n\ndatabase = FileAttachment(\"spring-37040.db.sqlite3\").sqlite()\n\nfunction k(d) {\n  return Number(d3.utcFormat('%Y')(d)) +1\n}\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\ndb = database.sql`SELECT year, std_title as label, counts, rel as relative, gender, journal_fk from data`\n\ntitle_w_count = database.sql`select std_title as label, sum(counts) as count, journal_fk from data group by label, journal_fk`\n\njournals = [ {id:1, name:'All of KB'}, {id:2, name:\"Dagens Nyheter\"} ]\ngenders = [ ... new Set(db.map((d) =&gt; d.gender))]\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nviewof journal = Inputs.select(journals,\n  {label: html`Newspaper`,\n    format: (t) =&gt; t.name,\n    value: (t) =&gt; t.id,\n    size : 2\n  })\n\nused_titles = title_w_count.filter((d) =&gt; (d.journal_fk == journal.id))\n\nviewof titles = Inputs.select(reduced,\n  {label: html`Titles`,\n    value: (t) =&gt; t.label,\n    format: (t) =&gt; `${t.label} (${t.count})`,\n    multiple: true,\n    size : 42,\n    width: 350,\n  })\ntitles_only = titles.map(d =&gt; d.label)\n\nviewof title_target = Inputs.text({placeholder: \"Filter titles\"})\n\nreduced = used_titles.filter((d) =&gt; (d.label.toLowerCase().includes(title_target)))\nreduced_titles = reduced.map(d =&gt; d.label)\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\njournal_filter = (d) =&gt; d.journal_fk == journal.id\n\ntitle_filter = reduced.length === 0 ?  (d) =&gt; (true) : titles.length === 0 ? (d) =&gt; reduced_titles.includes(d.label) : (d) =&gt; titles_only.includes(d.label)\n\n\ntimeline_data = db.filter(journal_filter)\n                    .filter(title_filter).map((d) =&gt; ({\n                      year : new Date(d.year, 0, 1),\n                      counts : d.counts,\n                      title : d.title,\n                      label : d.label,\n                      relative : d.relative,\n                    }))\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nHits (pages)\n\nPlot.plot({\n    x: {\n    label: \"Year\",\n    tickformat: k,\n  },\n  y:{\n    label: \"Number of page hits\",\n    grid: true\n  },\n    // color: {legend: true},\n    marks: [\n      // Plot.ruleY([0, ylim]),\n\n      Plot.lineY(timeline_data, {\n        x: \"year\",\n        y: (d) =&gt; d.counts,\n        stroke:'label', curve: \"catmull-rom\"}, ),\n      Plot.ruleX(timeline_data, Plot.pointerX({\n        py: \"counts\",\n        x: \"year\",\n        stroke: 'red',\n        format: k\n        })),\n    Plot.tip(timeline_data, Plot.pointer({\n      x: \"year\",\n      y: \"counts\",\n      title: (d) =&gt; `${d.label}: ${d.value}\\nYear: ${d.year}`\n    }))\n  ],\n})\n\n\n\n\n\n\n\n\nHits relative to total number of pages\n\nPlot.plot({\n    x: {\n    label: \"Year\",\n    tickformat: k,\n  },\n  y:{\n    label: \"Number of page hits\",\n    grid: true\n  },\n    // color: {legend: true},\n    marks: [\n      // Plot.ruleY([0, ylim]),\n\n      Plot.lineY(timeline_data, {\n        x: \"year\",\n        y: (d) =&gt; d.relative,\n        stroke:'label', curve: \"catmull-rom\"}, ),\n      Plot.ruleX(timeline_data, Plot.pointerX({\n        py: \"relative\",\n        x: \"year\",\n        stroke: 'red',\n        format: k\n        })),\n    Plot.tip(timeline_data, Plot.pointer({\n      x: \"year\",\n      y: \"relative\",\n      title: (d) =&gt; `${d.label}: ${d.value}\\nYear: ${d.year}`\n    }))\n  ],\n})"
+  }
+]
